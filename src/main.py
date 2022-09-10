@@ -1,5 +1,3 @@
-from time import time
-
 from colorama import Fore
 
 from api import RED, OPS
@@ -8,36 +6,24 @@ from config import Config
 from downloader import download_torrent
 from filesystem import create_folder, get_files, get_filename
 from parser import get_torrent_data, get_new_hash, get_source
+from progress import Progress
 
 
 def main():
-    start_time = time()
-
     create_folder(args.folder_out)
     local_torrents = get_files(args.folder_in)
-
-    s = {
-        "total": len(local_torrents),
-        "downloaded": 0,
-        "already-downloaded": 0,
-        "not-found": 0,
-        "skipped": 0,
-        "error": 0,
-    }
+    p = Progress(len(local_torrents))
 
     for i, torrent_path in enumerate(local_torrents, 1):
         filename = get_filename(torrent_path)
         try:
             torrent_data = get_torrent_data(torrent_path)
         except AssertionError:
-            print(
-                f"{Fore.RED}Decoding error. Torrent file is malformed.{Fore.RESET}"
-            )
-            s["error"] += 1
+            p.error.print("Decoding error.")
             continue
         source = get_source(torrent_data)
 
-        print(f"{i}/{s['total']}) {filename}")
+        print(f"{i}/{p.total}) {filename}")
 
         if source == b"OPS" and args.ops_to_red:
             api = red
@@ -48,10 +34,7 @@ def main():
             new_sources = [b"OPS"]
             api = ops
         else:
-            print(
-                f"{Fore.LIGHTBLACK_EX}Skipped: source is {source.decode('utf-8')}.{Fore.RESET}"
-            )
-            s["skipped"] += 1
+            p.skipped.print(f"Skipped: source is {source.decode('utf-8')}.")
             continue
 
         for i, new_source in enumerate(new_sources, 0):
@@ -66,52 +49,36 @@ def main():
                     api, torrent_details, args.folder_out
                 )
                 if torrent_filepath:
-                    print(
-                        f"{Fore.LIGHTGREEN_EX}Found with source {new_source} "
-                        f"and downloaded as '{get_filename(torrent_filepath)}'.{Fore.RESET}"
+                    p.downloaded.print(
+                        f"Found with source {new_source} "
+                        f"and downloaded as '{get_filename(torrent_filepath)}'."
                     )
-                    s["downloaded"] += 1
                 else:
-                    print(
-                        f"{Fore.LIGHTYELLOW_EX}Found with source {new_source}, "
-                        f"but it has already been downloaded.{Fore.RESET}"
+                    p.already_downloaded.print(
+                        f"Found with source {new_source}, "
+                        f"but it has already been downloaded."
                     )
-                    s["already-downloaded"] += 1
                 break  # Skip the PTH check if found on RED
             elif torrent_details["error"] in known_errors:
                 if not args.pth:
-                    print(
-                        f"{Fore.LIGHTRED_EX}Not found with source {new_source}.{Fore.RESET}"
+                    p.not_found.print(
+                        f"Not found with source {new_source}.",
+                        add=False
                     )
                 elif args.pth and i == 1:
-                    print(
-                        f"{Fore.LIGHTRED_EX}Not found with sources "
-                        f"{', '.join(x.decode('utf-8') for x in new_sources)}.{Fore.RESET}"
+                    p.not_found.print(
+                        f"Not found with sources "
+                        f"{', '.join(x.decode('utf-8') for x in new_sources)}.",
+                        add=False,
                     )
-                s["not-found"] += 1
+                p.not_found.increment()
             else:
-                print(
-                    f"{Fore.RED}Unexpected error while using source {new_source}{Fore.RESET}"
-                    f":\n{str(torrent_details)}"
+                p.error.print(
+                    f"Unexpected error while using source {new_source}"
+                    f"{Fore.LIGHTBLACK_EX}:\n{str(torrent_details)}"
                 )
-                s["error"] += 1
 
-    print(
-        f"\n{'-' * 50}"
-        f"\nAnalyzed {s['total']} local torrents in {time() - start_time:.2f} seconds:\n",
-        f"*\t{Fore.LIGHTGREEN_EX}Downloaded for cross-seeding{Fore.RESET}: {s['downloaded']}"
-        f" ({s['downloaded']/s['total']*100:.0f}%)\n",
-        f"*\t{Fore.LIGHTYELLOW_EX}Already downloaded{Fore.RESET}: {s['already-downloaded']} "
-        f"({s['already-downloaded']/s['total']*100:.0f}%)\n",
-        f"*\t{Fore.LIGHTRED_EX}Not found{Fore.RESET}: {s['not-found']} "
-        f"({s['not-found']/s['total']*100:.0f}%)\n",
-        f"*\t{Fore.RED}Errors{Fore.RESET}: {s['error']} "
-        f"({s['error']/s['total']*100:.0f}%)\n",
-        f"*\t{Fore.LIGHTBLACK_EX}Skipped{Fore.RESET}: {s['skipped']} "
-        f"({s['skipped']/s['total']*100:.0f}%)\n",
-        f"{'-' * 50}",
-        sep=""
-    )
+    print(p.report())
 
 
 if __name__ == "__main__":
