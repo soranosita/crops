@@ -20,7 +20,8 @@ class GazelleAPI:
             now = time.time()
             if (now - self._last_used) > self._rate_limit:
                 self._last_used = now
-                r = self._s.get(self._api_url, params={"action": action} | params)
+                params["action"] = action
+                r = self._s.get(self._api_url, params=params)
                 if raw:
                     return r
                 return r.text
