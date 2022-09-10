@@ -7,7 +7,7 @@ def get_source(torrent_data):
     try:
         return torrent_data[b"info"][b"source"]
     except KeyError:
-        return None
+        return b"empty"
 
 
 def get_new_hash(torrent_data, new_source):
