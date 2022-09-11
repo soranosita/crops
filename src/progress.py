@@ -19,9 +19,14 @@ class Status:
             self.increment()
 
     def report(self):
+        try:
+            percentage = self.count/self.total*100
+        except ZeroDivisionError:
+            percentage = 0
+
         return (
             f"*\t{self.color}{self.name}{Fore.RESET}: {self.count} "
-            f"({self.count/self.total*100:.0f}%)"
+            f"({percentage:.0f}%)"
         )
 
 
