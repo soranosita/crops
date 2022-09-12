@@ -15,7 +15,7 @@ class GazelleAPI:
         self._rate_limit = rate_limit
         self._last_used = 0
 
-    def _get(self, action, params=dict(), raw=False):
+    def _get(self, action, params, raw=False):
         while True:
             now = time.time()
             if (now - self._last_used) > self._rate_limit:
@@ -53,4 +53,3 @@ class RED(GazelleAPI):
             auth_header={"Authorization": api_key},
             rate_limit=delay_in_seconds
         )
-
