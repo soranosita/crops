@@ -3,9 +3,9 @@ from colorama import Fore
 from api import RED, OPS
 from args import get_args
 from config import Config
-from downloader import download_torrent
+from downloader import get_torrent_id, get_torrent_filepath, download_torrent
 from filesystem import create_folder, get_files, get_filename
-from parser import get_torrent_data, get_new_hash, get_source
+from parser import get_torrent_data, get_new_hash, get_source, save_torrent_data
 from progress import Progress
 
 
@@ -13,6 +13,8 @@ def main():
     create_folder(args.folder_out)
     local_torrents = get_files(args.folder_in)
     p = Progress(len(local_torrents))
+    if args.announce:
+        p.downloaded.name = "Built for cross-seeding"
 
     for i, torrent_path in enumerate(local_torrents, 1):
         filename = get_filename(torrent_path)
@@ -45,10 +47,22 @@ def main():
             known_errors = ("bad hash parameter", "bad parameters")
 
             if status == "success":
-                torrent_filepath = download_torrent(
-                    api, torrent_details, args.folder_out
+                torrent_filepath = get_torrent_filepath(
+                    torrent_details, api.sitename, args.folder_out
                 )
-                if torrent_filepath:
+
+                if torrent_filepath and args.announce:
+                    torrent_data[b"announce"] = args.announce
+                    save_torrent_data(torrent_filepath, torrent_data)
+
+                    p.downloaded.print(
+                        f"Found with source {new_source} "
+                        f"and built as '{get_filename(torrent_filepath)}'."
+                    )
+                elif torrent_filepath:
+                    torrent_id = get_torrent_id(torrent_details)
+                    download_torrent(api, torrent_filepath, torrent_id)
+
                     p.downloaded.print(
                         f"Found with source {new_source} "
                         f"and downloaded as '{get_filename(torrent_filepath)}'."

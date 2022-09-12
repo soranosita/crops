@@ -22,3 +22,8 @@ def get_torrent_data(filename):
         data = bencoder.decode(f.read())
 
     return data
+
+
+def save_torrent_data(filename, torrent_data):
+    with open(filename, "wb") as f:
+        f.write(bencoder.encode(torrent_data))

@@ -53,4 +53,9 @@ def get_args():
         help="calculate infohashes with the PTH source flag too"
     )
 
+    o.add_argument(
+        "--announce", type=str,
+        help="use announce URL to build final .torrent file"
+    )
+
     return parser.parse_args()
