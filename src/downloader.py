@@ -6,6 +6,10 @@ def get_torrent_id(torrent_details):
     return torrent_details["response"]["torrent"]["id"]
 
 
+def get_torrent_url(site_url, torrent_id):
+    return f"{site_url}/torrents.php?torrentid={torrent_id}"
+
+
 def get_torrent_filepath(torrent_details, source, folder_out):
     filename = (
         f'{unescape(torrent_details["response"]["torrent"]["filePath"])} '

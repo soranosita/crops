@@ -7,55 +7,64 @@ def get_formatter(prog):
 
 def get_args():
     name = "crops"
-    description = "an open source cross-seeder for RED and OPS"
+    description = "an open source cross-seeder for RED & OPS"
     parser = argparse.ArgumentParser(
         prog=name,
         description=description,
         formatter_class=get_formatter,
-        add_help=False
+        add_help=False,
     )
 
-    h = parser.add_argument_group(title="support")
-    d = parser.add_argument_group(title="directories")
-    t = parser.add_argument_group(title="modes")
-    tg = t.add_mutually_exclusive_group(required=True)
-    o = parser.add_argument_group(title="extras")
-
-    # Help
-    h.add_argument(
-        "-h", "--help", action="help", default=argparse.SUPPRESS,
-        help="show this help message and exit"
+    support = parser.add_argument_group(title="support")
+    directories = parser.add_argument_group(title="directories")
+    modes = parser.add_argument_group(title="modes").add_mutually_exclusive_group(
+        required=True
     )
+    extras = parser.add_argument_group(title="extras")
 
-    # Directories
-    d.add_argument(
-        "-i", "--folder-in", type=str, required=True,
-        help="folder with the .torrent files to check"
-    )
-    d.add_argument(
-        "-o", "--folder_out", type=str, required=True,
-        help="folder where cross-seedable .torrent files will be saved"
+    support.add_argument(
+        "-h",
+        "--help",
+        action="help",
+        default=argparse.SUPPRESS,
+        help="show this help message and exit",
     )
 
-    # Modes
-    tg.add_argument(
-        "--ops-to-red", action="store_true",
-        help="consider torrents with the OPS source flag"
+    directories.add_argument(
+        "-i",
+        "--folder-in",
+        type=str,
+        required=True,
+        help="folder with the .torrent files to check",
     )
-    tg.add_argument(
-        "--red-to-ops", action="store_true",
-        help="consider torrents with the RED source flag"
+    directories.add_argument(
+        "-o",
+        "--folder_out",
+        type=str,
+        required=True,
+        help="folder where cross-seedable .torrent files will be saved",
     )
 
-    # Extras
-    o.add_argument(
-        "--pth", action="store_true",
-        help="calculate infohashes with the PTH source flag too"
+    modes.add_argument(
+        "--ops-to-red",
+        action="store_true",
+        help="consider torrents with the OPS source flag",
+    )
+    modes.add_argument(
+        "--red-to-ops",
+        action="store_true",
+        help="consider torrents with the RED source flag",
     )
 
-    o.add_argument(
-        "--announce", type=str,
-        help="use announce URL to build final .torrent file"
+    extras.add_argument(
+        "--pth",
+        action="store_true",
+        help="calculate infohashes with the PTH source flag too",
+    )
+    extras.add_argument(
+        "--download",
+        action="store_true",
+        help="download final .torrent files instead of generating them",
     )
 
     return parser.parse_args()

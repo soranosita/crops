@@ -35,8 +35,8 @@ class Progress:
         self.start_time = time()
 
         self.total = total
-        self.downloaded = Status("Downloaded for cross-seeding", Fore.LIGHTGREEN_EX, total)
-        self.already_downloaded = Status("Already downloaded", Fore.LIGHTYELLOW_EX, total)
+        self.generated = Status("Generated for cross-seeding", Fore.LIGHTGREEN_EX, total)
+        self.already_exists = Status("Already exists", Fore.LIGHTYELLOW_EX, total)
         self.not_found = Status("Not found", Fore.LIGHTRED_EX, total)
         self.error = Status("Errors", Fore.RED, total)
         self.skipped = Status("Skipped", Fore.LIGHTBLACK_EX, total)
@@ -46,8 +46,8 @@ class Progress:
         messages = '\n'.join(
             x.report()
             for x in (
-                self.downloaded,
-                self.already_downloaded,
+                self.generated,
+                self.already_exists,
                 self.not_found,
                 self.error,
                 self.skipped,

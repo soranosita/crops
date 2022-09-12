@@ -1,6 +1,7 @@
-import requests
 import time
 import json
+
+import requests
 
 from errors import AuthenticationError
 
@@ -13,7 +14,9 @@ class GazelleAPI:
         self._last_used = 0
 
         self.sitename = self.__class__.__name__
-        self._api_url = f"{site_url}/ajax.php"
+        self.site_url = site_url
+        self.tracker_url = tracker_url
+        self._api_url = f"{self.site_url}/ajax.php"
         self.announce_url = self._get_announce_url(tracker_url)
 
     def _get(self, action, params, raw=False):
@@ -28,20 +31,20 @@ class GazelleAPI:
                 return r.text
             else:
                 time.sleep(0.2)
-    
+
     def _get_announce_url(self, tracker_url):
         account_info = self.get_account_info()
         if account_info["status"] != "success":
             raise AuthenticationError(f"Invalid API key for {self.sitename}.")
         passkey = account_info["response"]["passkey"]
         return f"{tracker_url}/{passkey}/announce"
-    
+
     def get_account_info(self):
         t = self._get("index", {})
         return json.loads(t)
 
-    def find_torrent(self, hash):
-        t = self._get("torrent", {"hash": hash})
+    def find_torrent(self, hash_):
+        t = self._get("torrent", {"hash": hash_})
         return json.loads(t)
 
     def download_torrent(self, torrent_id):

@@ -3,7 +3,7 @@ from colorama import Fore
 from api import RED, OPS
 from args import get_args
 from config import Config
-from downloader import get_torrent_id, get_torrent_filepath, download_torrent
+from downloader import get_torrent_id, get_torrent_url, get_torrent_filepath, download_torrent
 from filesystem import create_folder, get_files, get_filename
 from parser import get_torrent_data, get_new_hash, get_source, save_torrent_data
 from progress import Progress
@@ -13,8 +13,8 @@ def main():
     create_folder(args.folder_out)
     local_torrents = get_files(args.folder_in)
     p = Progress(len(local_torrents))
-    if args.announce:
-        p.downloaded.name = "Built for cross-seeding"
+    if args.download:
+        p.generated.name = "Downloaded for cross-seeding"
 
     for i, torrent_path in enumerate(local_torrents, 1):
         filename = get_filename(torrent_path)
@@ -40,8 +40,8 @@ def main():
             continue
 
         for i, new_source in enumerate(new_sources, 0):
-            hash = get_new_hash(torrent_data, new_source)
-            torrent_details = api.find_torrent(hash)
+            hash_ = get_new_hash(torrent_data, new_source)
+            torrent_details = api.find_torrent(hash_)
             status = torrent_details["status"]
             new_source = new_source.decode("utf-8")
             known_errors = ("bad hash parameter", "bad parameters")
@@ -51,26 +51,29 @@ def main():
                     torrent_details, api.sitename, args.folder_out
                 )
 
-                if torrent_filepath and args.announce:
-                    torrent_data[b"announce"] = args.announce
-                    save_torrent_data(torrent_filepath, torrent_data)
-
-                    p.downloaded.print(
-                        f"Found with source {new_source} "
-                        f"and built as '{get_filename(torrent_filepath)}'."
-                    )
-                elif torrent_filepath:
+                if torrent_filepath and args.download:
                     torrent_id = get_torrent_id(torrent_details)
                     download_torrent(api, torrent_filepath, torrent_id)
 
-                    p.downloaded.print(
+                    p.generated.print(
                         f"Found with source {new_source} "
                         f"and downloaded as '{get_filename(torrent_filepath)}'."
                     )
+                elif torrent_filepath:
+                    torrent_id = get_torrent_id(torrent_details)
+                    torrent_data[b"announce"] = api.announce_url
+                    torrent_data[b"comment"] = get_torrent_url(api.site_url, torrent_id)
+
+                    save_torrent_data(torrent_filepath, torrent_data)
+
+                    p.generated.print(
+                        f"Found with source {new_source} "
+                        f"and generated as '{get_filename(torrent_filepath)}'."
+                    )
                 else:
-                    p.already_downloaded.print(
+                    p.already_exists.print(
                         f"Found with source {new_source}, "
-                        f"but it has already been downloaded."
+                        f"but the .torrent already exists."
                     )
                 break  # Skip the PTH check if found on RED
             elif torrent_details["error"] in known_errors:
