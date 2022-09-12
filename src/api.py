@@ -19,14 +19,14 @@ class GazelleAPI:
         self._api_url = f"{self.site_url}/ajax.php"
         self.announce_url = self._get_announce_url(tracker_url)
 
-    def _get(self, action, params, raw=False):
+    def _get(self, action, **params):
         while True:
             now = time.time()
             if (now - self._last_used) > self._rate_limit:
                 self._last_used = now
                 params["action"] = action
                 r = self._s.get(self._api_url, params=params)
-                if raw:
+                if action == "download":
                     return r
                 return r.text
             else:
@@ -40,15 +40,15 @@ class GazelleAPI:
         return f"{tracker_url}/{passkey}/announce"
 
     def get_account_info(self):
-        t = self._get("index", {})
+        t = self._get("index")
         return json.loads(t)
 
     def find_torrent(self, hash_):
-        t = self._get("torrent", {"hash": hash_})
+        t = self._get("torrent", hash=hash_)
         return json.loads(t)
 
     def download_torrent(self, torrent_id):
-        t = self._get("download", {"id": torrent_id}, raw=True)
+        t = self._get("download", id=torrent_id)
         return t
 
 
