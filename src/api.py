@@ -1,19 +1,20 @@
-import json
-
 import requests
 import time
+import json
+
+from errors import AuthenticationError
 
 
 class GazelleAPI:
-    def __init__(self, api_url, auth_header, rate_limit):
+    def __init__(self, site_url, tracker_url, auth_header, rate_limit):
         self._s = requests.session()
-
-        self._api_url = api_url
         self._s.headers.update(auth_header)
-
-        self.sitename = self.__class__.__name__
         self._rate_limit = rate_limit
         self._last_used = 0
+
+        self.sitename = self.__class__.__name__
+        self._api_url = f"{site_url}/ajax.php"
+        self.announce_url = self._get_announce_url(tracker_url)
 
     def _get(self, action, params, raw=False):
         while True:
@@ -27,6 +28,17 @@ class GazelleAPI:
                 return r.text
             else:
                 time.sleep(0.2)
+    
+    def _get_announce_url(self, tracker_url):
+        account_info = self.get_account_info()
+        if account_info["status"] != "success":
+            raise AuthenticationError(f"Invalid API key for {self.sitename}.")
+        passkey = account_info["response"]["passkey"]
+        return f"{tracker_url}/{passkey}/announce"
+    
+    def get_account_info(self):
+        t = self._get("index", {})
+        return json.loads(t)
 
     def find_torrent(self, hash):
         t = self._get("torrent", {"hash": hash})
@@ -40,7 +52,8 @@ class GazelleAPI:
 class OPS(GazelleAPI):
     def __init__(self, api_key, delay_in_seconds=2):
         super().__init__(
-            api_url="https://orpheus.network/ajax.php",
+            site_url="https://orpheus.network",
+            tracker_url="https://home.opsfet.ch",
             auth_header={"Authorization": f"token {api_key}"},
             rate_limit=delay_in_seconds
         )
@@ -49,7 +62,8 @@ class OPS(GazelleAPI):
 class RED(GazelleAPI):
     def __init__(self, api_key, delay_in_seconds=1):
         super().__init__(
-            api_url="https://redacted.ch/ajax.php",
+            site_url="https://redacted.ch",
+            tracker_url="https://flacsfor.me",
             auth_header={"Authorization": api_key},
             rate_limit=delay_in_seconds
         )
