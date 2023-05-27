@@ -54,12 +54,12 @@ def main():
 
         # TODO: make it so you don't calc hashes twice or find a better flow control for this.
         found_crossseed = False
-        for src in new_sources:
-            hash_ = get_new_hash(torrent_data, src)
+        for new_source in new_sources:
+            hash_ = get_new_hash(torrent_data, new_source)
             try:
                 dest_hash_file = infohash_dict[hash_]
                 p.already_exists.print(
-                    f"Already cross-seeding {dest_hash_file} with source {new_source}."
+                    f"Already cross-seeding {dest_hash_file} with source {new_source.decode('utf-8')}."
                 )
                 found_crossseed = True
                 break
