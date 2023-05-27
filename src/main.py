@@ -7,9 +7,13 @@ from downloader import get_torrent_id, get_torrent_url, get_torrent_filepath, do
 from filesystem import create_folder, get_files, get_filename
 from parser import get_torrent_data, get_new_hash, get_source, save_torrent_data
 from progress import Progress
+from urllib.parse import urlparse
 
 ops_sources = (b"OPS", b"APL")
 red_sources = (b"RED", b"PTH")
+
+ops_announce = "home.opsfet.ch"
+red_announce = "flacsfor.me"
 
 def main():
     create_folder(args.folder_out)
@@ -29,14 +33,21 @@ def main():
 
         print(f"{i}/{p.total}) {filename}")
 
-        if source in ops_sources:
+        announce_url = urlparse(torrent_data[b'announce'])
+        announce_loc = announce_url.netloc.decode('utf-8')
+        if announce_loc == ops_announce:
             api = red
             new_sources = red_sources
-        elif source in red_sources:
+        elif announce_loc == red_announce:
             api = ops
             new_sources = ops_sources
         else:
-            p.skipped.print(f"Skipped: source is {source.decode('utf-8')}.")
+            try:
+                print_source = source.decode('utf-8')
+            except:
+                print_source = "empty"
+
+            p.skipped.print(f"Skipped: source is {print_source}.")
             continue
 
         for i, new_source in enumerate(new_sources, 0):
@@ -75,7 +86,7 @@ def main():
                         f"Found with source {new_source}, "
                         f"but the .torrent already exists."
                     )
-                break  # Skip the PTH check if found on RED
+                break  # Skip the other source hash checks if successful
             elif torrent_details["error"] in known_errors:
                 if i == 1:
                     p.not_found.print(
