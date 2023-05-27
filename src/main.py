@@ -15,7 +15,7 @@ def gen_infohash_dict(local_torrents):
         with open(file, mode="rb") as f:
             torrent_data = get_torrent_data(file)
             infohash = get_infohash(torrent_data)
-            infohash_dict[infohash] = torrent_data[b'info'][b'name'].decode('utf-8')
+            infohash_dict[infohash] = get_filename(file)
 
     return infohash_dict
 
@@ -24,8 +24,11 @@ def main():
     create_folder(args.folder_out)
     local_torrents = get_files(args.folder_in)
     p = Progress(len(local_torrents))
+
     if args.download:
         p.generated.name = "Downloaded for cross-seeding"
+
+    infohash_dict = gen_infohash_dict(local_torrents)
 
     for i, torrent_path in enumerate(local_torrents, 1):
         filename = get_filename(torrent_path)
@@ -48,6 +51,23 @@ def main():
             api = ops
         else:
             p.skipped.print(f"Skipped: source is {source.decode('utf-8')}.")
+            continue
+
+        # TODO: make it so you don't calc hashes twice or find a better flow control for this.
+        found_crossseed = False
+        for src in new_sources:
+            hash_ = get_new_hash(torrent_data, src)
+            try:
+                dest_hash_file = infohash_dict[hash_]
+                p.already_exists.print(
+                    f"Already cross-seeding {dest_hash_file} with source {new_source}."
+                )
+                found_crossseed = True
+                break
+            except KeyError:
+                continue
+
+        if found_crossseed:
             continue
 
         for i, new_source in enumerate(new_sources, 0):
@@ -84,7 +104,7 @@ def main():
                 else:
                     p.already_exists.print(
                         f"Found with source {new_source}, "
-                        f"but the .torrent already exists."
+                        f"but the .torrent already exists in the output directory."
                     )
                 break  # Skip the PTH check if found on RED
             elif torrent_details["error"] in known_errors:
