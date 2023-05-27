@@ -7,7 +7,6 @@ from downloader import get_torrent_id, get_torrent_url, get_torrent_filepath, do
 from filesystem import create_folder, get_files, get_filename
 from parser import get_torrent_data, get_infohash, get_new_hash, get_source, save_torrent_data
 from progress import Progress
-import json
 
 def gen_infohash_dict(local_torrents):
     infohash_dict = {}
