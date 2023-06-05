@@ -59,7 +59,7 @@ def main():
             try:
                 dest_hash_file = infohash_dict[hash_]
                 p.already_exists.print(
-                    f"An infohash match was found in the output directory with source {new_source.decode('utf-8')}."
+                    f"An infohash match was found in the input directory with source {new_source.decode('utf-8')}."
                 )
                 found_infohash_match = True
                 break
