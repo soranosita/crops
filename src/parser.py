@@ -9,12 +9,16 @@ def get_source(torrent_data):
     except KeyError:
         return b"empty"
 
+def get_infohash(torrent_data):
+    encoded_info = bencoder.encode(torrent_data[b"info"])
+    hash = sha1(encoded_info).hexdigest().upper()
+
+    return hash
 
 def get_new_hash(torrent_data, new_source):
     torrent_data[b"info"][b"source"] = new_source
-    hash = sha1(bencoder.encode(torrent_data[b"info"])).hexdigest().upper()
 
-    return hash
+    return get_infohash(torrent_data)
 
 
 def get_torrent_data(filename):
