@@ -20,12 +20,13 @@ def gen_infohash_dict(files):
 def main():
     create_folder(args.folder_out)
     local_torrents = get_files(args.folder_in)
+    dest_torrents = get_files(args.folder_out)
     p = Progress(len(local_torrents))
-
     if args.download:
         p.generated.name = "Downloaded for cross-seeding"
 
-    infohash_dict = gen_infohash_dict(local_torrents)
+    in_infohash_dict = gen_infohash_dict(local_torrents)
+    out_infohash_dict = gen_infohash_dict(dest_torrents)
 
     for i, torrent_path in enumerate(local_torrents, 1):
         filename = get_filename(torrent_path)
@@ -50,19 +51,21 @@ def main():
             p.skipped.print(f"Skipped: source is {source.decode('utf-8')}.")
             continue
 
-        # TODO: make it so you don't calc hashes twice or find a better flow control for this.
         found_infohash_match = False
         for new_source in new_sources:
             hash_ = get_new_hash(torrent_data, new_source)
-            try:
-                dest_hash_file = infohash_dict[hash_]
+            if hash_ in in_infohash_dict:
                 p.already_exists.print(
-                    f"An infohash match was found in the input directory with source {new_source.decode('utf-8')}."
+                    f"A match was found in the input directory with source {new_source.decode('utf-8')}."
                 )
                 found_infohash_match = True
                 break
-            except KeyError:
-                continue
+            if hash_ in out_infohash_dict:
+                p.already_exists.print(
+                    f"A match was found in the output directory with source {new_source.decode('utf-8')}."
+                )
+                found_infohash_match = True
+                break
 
         if found_infohash_match:
             continue
@@ -97,11 +100,6 @@ def main():
                     p.generated.print(
                         f"Found with source {new_source} "
                         f"and generated as '{get_filename(torrent_filepath)}'."
-                    )
-                else:
-                    p.already_exists.print(
-                        f"Found with source {new_source}, "
-                        f"but the .torrent already exists in the output directory."
                     )
                 break  # Skip the PTH check if found on RED
             elif torrent_details["error"] in known_errors:
