@@ -81,17 +81,16 @@ def main():
                 torrent_filepath = get_torrent_filepath(
                     torrent_details, api.sitename, args.folder_out
                 )
+                torrent_id = get_torrent_id(torrent_details)
 
-                if torrent_filepath and args.download:
-                    torrent_id = get_torrent_id(torrent_details)
+                if args.download:
                     download_torrent(api, torrent_filepath, torrent_id)
 
                     p.generated.print(
                         f"Found with source {new_source} "
                         f"and downloaded as '{get_filename(torrent_filepath)}'."
                     )
-                elif torrent_filepath:
-                    torrent_id = get_torrent_id(torrent_details)
+                else:
                     torrent_data[b"announce"] = api.announce_url
                     torrent_data[b"comment"] = get_torrent_url(api.site_url, torrent_id)
 

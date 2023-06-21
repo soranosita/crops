@@ -16,8 +16,6 @@ def get_torrent_filepath(torrent_details, source, folder_out):
         f'[{source}].torrent'
     )
     torrent_filepath = os.path.join(folder_out, filename)
-    if os.path.isfile(torrent_filepath):
-        return None
     return torrent_filepath
 
 
