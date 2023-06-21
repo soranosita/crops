@@ -8,14 +8,12 @@ from filesystem import create_folder, get_files, get_filename
 from parser import get_torrent_data, get_infohash, get_new_hash, get_source, save_torrent_data
 from progress import Progress
 
-def gen_infohash_dict(local_torrents):
+def gen_infohash_dict(files):
     infohash_dict = {}
-    for file in local_torrents:
-        with open(file, mode="rb") as f:
-            torrent_data = get_torrent_data(file)
-            infohash = get_infohash(torrent_data)
-            infohash_dict[infohash] = get_filename(file)
-
+    for file in files:
+        torrent_data = get_torrent_data(file)
+        infohash = get_infohash(torrent_data)
+        infohash_dict[infohash] = torrent_data[b"info"][b"name"].decode("utf8")
     return infohash_dict
 
 
