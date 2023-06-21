@@ -54,7 +54,12 @@ def main():
             hash_ = get_new_hash(torrent_data, new_source)
             torrent_details = api.find_torrent(hash_)
             status = torrent_details["status"]
-            new_source = new_source.decode("utf-8")
+
+            try:
+                new_source = new_source.decode("utf-8")
+            except:
+                new_source = "empty"
+
             known_errors = ("bad hash parameter", "bad parameters")
 
             torrent_successful = False
