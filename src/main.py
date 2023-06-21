@@ -9,8 +9,8 @@ from parser import get_torrent_data, get_new_hash, get_source, save_torrent_data
 from progress import Progress
 from urllib.parse import urlparse
 
-ops_sources = (b"OPS", b"APL")
-red_sources = (b"RED", b"PTH")
+ops_sources = (b"OPS", b"APL", b"")
+red_sources = (b"RED", b"PTH", b"")
 
 ops_announce = "home.opsfet.ch"
 red_announce = "flacsfor.me"
@@ -93,7 +93,7 @@ def main():
                 if i == 1:
                     p.not_found.print(
                         f"Not found with sources "
-                        f"{', '.join(x.decode('utf-8') for x in new_sources)}.",
+                        f"{', '.join(x.decode('utf-8') or 'empty' for x in new_sources)}.",
                         add=False,
                     )
             else:
