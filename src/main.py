@@ -29,11 +29,16 @@ def main():
         except AssertionError:
             p.error.print("Decoding error.")
             continue
-        source = get_source(torrent_data)
 
         print(f"{i}/{p.total}) {filename}")
 
-        announce_url = urlparse(torrent_data[b'announce'])
+        try:
+            announce_data = torrent_data[b'announce']
+        except:
+            p.error.print("No announce URL found.")
+            continue
+
+        announce_url = urlparse(announce_data)
         announce_loc = announce_url.netloc.decode('utf-8')
         if announce_loc == ops_announce:
             api = red
@@ -43,10 +48,11 @@ def main():
             new_sources = ops_sources
         else:
             try:
-                print_source = source.decode('utf-8')
+                print_source = get_source(torrent_data).decode('utf-8')
             except:
                 print_source = "empty"
 
+            # TODO: make this message clearer
             p.skipped.print(f"Skipped: source is {print_source}.")
             continue
         
