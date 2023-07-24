@@ -32,24 +32,35 @@ def main():
             p.error.print("Decoding error.")
             continue
 
-        try:
-            announce_data = torrent_data[b'announce']
-        except:
-            p.error.print("No announce URL found.")
-            continue
-
-        announce_url = urlparse(announce_data)
-        announce_loc = announce_url.netloc.decode('utf-8')
-
-        if announce_loc == ops_announce:
-            api = red
-            new_sources = red_sources
-        elif announce_loc == red_announce:
-            api = ops
-            new_sources = ops_sources
+        source = get_source(torrent_data)
+        if source is None:
+            try:
+                announce_data = torrent_data[b'announce']
+                announce_url = urlparse(announce_data)
+                announce_loc = announce_url.netloc.decode('utf-8')
+            except:
+                p.error.print("No source flag or valid announce url found.")
+                continue
+            
+            if announce_loc == ops_announce:
+                api = red
+                new_sources = red_sources
+            elif announce_loc == red_announce:
+                api = ops
+                new_sources = ops_sources
+            else:
+                p.skipped.print(f"Skipped: Torrent announces to {announce_loc} and source flag is absent.")
+                continue
         else:
-            p.skipped.print(f"Skipped: Torrent announces to {announce_loc}")
-            continue
+            if source in ops_sources:
+                api = red
+                new_sources = red_sources
+            elif source in red_sources:
+                api = ops
+                new_sources = ops_sources
+            else:
+                p.skipped.print(f"Skipped: Source flag is {source.decode('utf8')}.")
+                continue
         
         for i, new_source in enumerate(new_sources, 0):
             hash_ = get_new_hash(torrent_data, new_source)
